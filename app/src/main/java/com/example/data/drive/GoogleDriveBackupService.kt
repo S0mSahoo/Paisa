@@ -285,7 +285,7 @@ class GoogleDriveBackupService(private val context: Context) {
       .post(requestBody)
       .build()
 
-    okHttpClient.newCall(request).execute().use { response -> response.isSuccessful }
+    return okHttpClient.newCall(request).execute().use { response -> response.isSuccessful }
   }
 
   private fun updateFileContent(accessToken: String, fileId: String, jsonContent: String): Boolean {
@@ -297,6 +297,6 @@ class GoogleDriveBackupService(private val context: Context) {
       .patch(mediaBody)
       .build()
 
-    okHttpClient.newCall(request).execute().use { response -> response.isSuccessful }
+    return okHttpClient.newCall(request).execute().use { response -> response.isSuccessful }
   }
 }
