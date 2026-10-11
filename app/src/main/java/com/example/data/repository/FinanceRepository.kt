@@ -296,5 +296,108 @@ class FinanceRepository(private val context: Context) {
       currencySymbol = profile.currencySymbol
     )
   }
+
+  // ================= Sample Seed Data =================
+
+  suspend fun seedSampleDataIfEmpty() = withContext(Dispatchers.IO) {
+    val count = transactionDao.getAllTransactions().size
+    if (count == 0) {
+      val cal = Calendar.getInstance()
+      val currentMonthKey = DateUtils.getMonthKey(cal)
+      val startOfMonth = DateUtils.getStartOfMonth(cal)
+
+      // Seed Sample Monthly Budget
+      budgetDao.insertOrUpdateBudget(
+        BudgetEntity(
+          monthKey = currentMonthKey,
+          totalBudget = 45000.0,
+          categoryBudgetsJson = "{}",
+          updatedAt = System.currentTimeMillis()
+        )
+      )
+
+      // Seed Sample Recurring Rule
+      recurringRuleDao.insertRule(
+        RecurringRuleEntity(
+          title = "Monthly House Rent",
+          amount = 15000.0,
+          type = TransactionType.EXPENSE.name,
+          category = TransactionCategory.HOUSING.name,
+          interval = RecurrenceInterval.MONTHLY.name,
+          startDate = startOfMonth,
+          endDate = null,
+          lastGeneratedDate = startOfMonth,
+          paymentMethod = PaymentMethod.UPI.name,
+          note = "Auto-generated recurring rent",
+          isActive = true
+        )
+      )
+
+      // Seed Transactions for current month
+      val txs = listOf(
+        TransactionEntity(
+          title = "Monthly Salary",
+          amount = 75000.0,
+          type = TransactionType.INCOME.name,
+          category = TransactionCategory.SALARY.name,
+          timestamp = startOfMonth + 3600000L * 10,
+          note = "Direct payroll deposit",
+          paymentMethod = PaymentMethod.NET_BANKING.name
+        ),
+        TransactionEntity(
+          title = "Apartment Rent",
+          amount = 15000.0,
+          type = TransactionType.EXPENSE.name,
+          category = TransactionCategory.HOUSING.name,
+          timestamp = startOfMonth + 3600000L * 14,
+          note = "Monthly rent payment",
+          paymentMethod = PaymentMethod.UPI.name,
+          isRecurring = true
+        ),
+        TransactionEntity(
+          title = "Supermarket & Groceries",
+          amount = 4250.0,
+          type = TransactionType.EXPENSE.name,
+          category = TransactionCategory.GROCERIES.name,
+          timestamp = System.currentTimeMillis() - 86400000L * 2,
+          note = "Fresh vegetables, fruits and pantry",
+          paymentMethod = PaymentMethod.UPI.name
+        ),
+        TransactionEntity(
+          title = "Weekend Dinner & Cafe",
+          amount = 1850.0,
+          type = TransactionType.EXPENSE.name,
+          category = TransactionCategory.FOOD_DINING.name,
+          timestamp = System.currentTimeMillis() - 86400000L,
+          note = "Dinner with friends",
+          paymentMethod = PaymentMethod.CREDIT_CARD.name
+        ),
+        TransactionEntity(
+          title = "Electricity & Internet Bill",
+          amount = 2400.0,
+          type = TransactionType.EXPENSE.name,
+          category = TransactionCategory.UTILITIES.name,
+          timestamp = System.currentTimeMillis() - 86400000L * 4,
+          note = "High speed broadband and electricity",
+          paymentMethod = PaymentMethod.UPI.name
+        ),
+        TransactionEntity(
+          title = "Freelance Consulting",
+          amount = 18000.0,
+          type = TransactionType.INCOME.name,
+          category = TransactionCategory.FREELANCE.name,
+          timestamp = System.currentTimeMillis() - 86400000L * 5,
+          note = "UI design milestone",
+          paymentMethod = PaymentMethod.NET_BANKING.name
+        )
+      )
+      transactionDao.insertAll(txs)
+
+      val profile = getUserProfile()
+      if (profile.name.isBlank()) {
+        saveUserProfile(profile.copy(name = "Personal Account", hasCompletedOnboarding = true))
+      }
+    }
+  }
 }
 

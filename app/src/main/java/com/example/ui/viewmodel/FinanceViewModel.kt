@@ -42,6 +42,7 @@ sealed class AppAuthState {
   data object Connecting : AppAuthState()
   data object LoadingCloud : AppAuthState()
   data class SignedIn(val email: String) : AppAuthState()
+  data object Offline : AppAuthState()
   data class Error(val message: String) : AppAuthState()
 }
 
@@ -54,7 +55,7 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
   val googleDriveState: StateFlow<GoogleDriveState> = _googleDriveState.asStateFlow()
 
   private val _appAuthState = MutableStateFlow<AppAuthState>(
-    if (driveService.getLastSignedInAccount() != null) AppAuthState.LoadingCloud else AppAuthState.SignedOut
+    if (driveService.getLastSignedInAccount() != null) AppAuthState.LoadingCloud else AppAuthState.Offline
   )
   val appAuthState: StateFlow<AppAuthState> = _appAuthState.asStateFlow()
 
@@ -423,6 +424,19 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     val account = driveService.getLastSignedInAccount()
     if (account != null) {
       initializeSignedInAccount(account)
+    } else {
+      viewModelScope.launch {
+        repository.seedSampleDataIfEmpty()
+      }
+    }
+  }
+
+  fun continueOffline() {
+    _appAuthState.value = AppAuthState.Offline
+    if (_userProfile.value.name.isBlank()) {
+      val updated = _userProfile.value.copy(name = "Personal Account", hasCompletedOnboarding = true)
+      _userProfile.value = updated
+      repository.saveUserProfile(updated)
     }
   }
 
@@ -790,10 +804,8 @@ class FinanceViewModel(application: Application) : AndroidViewModel(application)
     viewModelScope.launch {
       driveService.signOut()
       cloudAccount = null
-      repository.clearAllFinancialData()
-      _userProfile.value = UserProfile()
       _googleDriveState.value = GoogleDriveState.NotConnected
-      _appAuthState.value = AppAuthState.SignedOut
+      _appAuthState.value = AppAuthState.Offline
       onComplete()
     }
   }

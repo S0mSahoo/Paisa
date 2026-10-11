@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,7 +24,8 @@ import com.example.ui.viewmodel.AppAuthState
 @Composable
 fun GoogleSignInScreen(
   authState: AppAuthState,
-  onSignIn: () -> Unit
+  onSignIn: () -> Unit,
+  onContinueOffline: () -> Unit = {}
 ) {
   val loading = authState is AppAuthState.Connecting || authState is AppAuthState.LoadingCloud
   val error = (authState as? AppAuthState.Error)?.message
@@ -45,7 +47,7 @@ fun GoogleSignInScreen(
     )
     Spacer(Modifier.height(8.dp))
     Text(
-      text = "Sign in with Google to securely access your financial data across devices.",
+      text = "Track your expenses, manage monthly budgets, and analyze spending habits.",
       style = MaterialTheme.typography.bodyLarge,
       color = MaterialTheme.colorScheme.onSurfaceVariant,
       textAlign = TextAlign.Center
@@ -68,6 +70,16 @@ fun GoogleSignInScreen(
         shape = MaterialTheme.shapes.large
       ) {
         Text("Continue with Google", fontWeight = FontWeight.SemiBold)
+      }
+
+      Spacer(Modifier.height(12.dp))
+
+      OutlinedButton(
+        onClick = onContinueOffline,
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large
+      ) {
+        Text("Use Offline (Local Storage)", fontWeight = FontWeight.Medium)
       }
     }
 

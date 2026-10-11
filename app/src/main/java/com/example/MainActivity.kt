@@ -46,8 +46,11 @@ class MainActivity : ComponentActivity() {
       }
 
       MyApplicationTheme {
-        Crossfade(targetState = authState is AppAuthState.SignedIn, label = "auth_state") { signedIn ->
-          if (signedIn) {
+        Crossfade(
+          targetState = authState is AppAuthState.SignedIn || authState is AppAuthState.Offline,
+          label = "auth_state"
+        ) { hasAccess ->
+          if (hasAccess) {
             MainAppScreen(viewModel = viewModel)
           } else {
             GoogleSignInScreen(
@@ -55,6 +58,9 @@ class MainActivity : ComponentActivity() {
               onSignIn = {
                 viewModel.startDriveConnecting()
                 signInLauncher.launch(viewModel.getDriveSignInIntent())
+              },
+              onContinueOffline = {
+                viewModel.continueOffline()
               }
             )
           }
